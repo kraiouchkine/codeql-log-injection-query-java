@@ -1,0 +1,47 @@
+
+name: "CodeQL Tests"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+  schedule:
+    - cron: '39 12 * * 2'
+    
+jobs:
+  analyze:
+    name: Test
+    runs-on: 'ubuntu-latest'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      id: init
+      uses: github/codeql-action/init@v2
+      with:
+        languages: java
+
+    - name: Run CodeQL Tests
+      env:
+        CODEQL_PATH: ${{ steps.init.outputs.codeql-path }}
+      run: |
+        $CODEQL_PATH test run --strict-test-discovery --show-extractor-output --threads=0 ./java/test >> ./java/test/test_output.log || true
+        
+    - uses: actions/upload-artifact@v3
+      with:
+        name: results
+        path: ./java/test
